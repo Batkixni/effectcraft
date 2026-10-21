@@ -28,7 +28,59 @@ fn plugins_list(s: &mut Session, _: &Value) -> Result<Value> {
             })
         })
         .collect();
-    Ok(json!({"api": plugin::PLUGIN_API_VERSION, "wasm": s.plugin_loader.is_some(), "plugins": list}))
+    Ok(json!({"api": plugin::PLUGIN_API_VERSION, "wasm": s.plugin_loader.is_some(), "openfx": s.ofx_loader.is_some(), "plugins": list}))
+}
+
+/// The OpenFX commands need a host built with the `openfx` feature.
+fn ofx_on(s: &Session) -> std::result::Result<(), String> {
+    if s.ofx_loader.is_some() { Ok(()) } else { Err("OpenFX plug-ins are not available in this build".into()) }
+}
+
+/// `effect.plugins.loadOfx`: load OpenFX plug-ins (an `.ofx` file, an `.ofx.bundle` folder or a
+/// folder scanned recursively) through [`Session::ofx_loader`].
+fn plugins_load_ofx(s: &mut Session, p: &Value) -> Result<Value> {
+    let c = "effect.plugins.loadOfx";
+    let loader = s.ofx_loader.ok_or_else(|| EngineError::Other("OpenFX plug-ins are not available in this build".into()))?;
+    let path = str_p(p, "path").ok_or_else(|| bad(c, "missing `path`"))?;
+    let r = loader(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let n = r["loaded"].as_array().map_or(0, Vec::len);
+    let errors: Vec<&str> = r["errors"].as_array().into_iter().flatten().filter_map(Value::as_str).collect();
+    match (n, errors.first()) {
+        (0, None) => s.toast(format!("{path}: no OpenFX effects in it")),
+        (_, None) => s.toast(format!("Loaded {n} OpenFX effect(s)")),
+        (_, Some(first)) => s.toast(format!("Loaded {n} OpenFX effect(s), {} problem(s): {first}", errors.len())),
+    }
+    Ok(r)
+}
+
+/// `effect.plugins.scanOfx`: load every plug-in in the host's OpenFX search paths
+/// ([`Session::ofx_search_paths`]). Missing folders are skipped; one bad plug-in doesn't stop
+/// the rest. Plug-ins that crashed the app while loading or rendering last time are skipped
+/// (the host keeps a blocklist); `retry: true` forgets that list first. Returns
+/// `{paths, loaded, errors}`.
+fn plugins_scan_ofx(s: &mut Session, p: &Value) -> Result<Value> {
+    let loader = s.ofx_loader.ok_or_else(|| EngineError::Other("OpenFX plug-ins are not available in this build".into()))?;
+    if b_p(p, "retry").unwrap_or(false)
+        && let Some(clear) = s.ofx_clear_blocklist
+    {
+        clear();
+    }
+    let (mut paths, mut loaded, mut errors) = (vec![], vec![], vec![]);
+    for dir in s.ofx_search_paths.clone() {
+        if !dir.exists() {
+            continue;
+        }
+        let path = dir.to_string_lossy().to_string();
+        match loader(&path) {
+            Ok(r) => {
+                loaded.extend(r["loaded"].as_array().cloned().unwrap_or_default());
+                errors.extend(r["errors"].as_array().cloned().unwrap_or_default());
+            }
+            Err(e) => errors.push(json!(format!("{path}: {e}"))),
+        }
+        paths.push(path);
+    }
+    Ok(json!({"paths": paths, "loaded": loaded, "errors": errors}))
 }
 
 /// `effect.plugins.load`: load WebAssembly effect plug-ins (a file, or every `.wasm` in a
@@ -666,7 +718,7 @@ pub fn specs() -> Vec<CommandSpec> {
         crate::query!(
             "effect.plugins.list",
             "List Effect Plug-ins",
-            "{} → {api, wasm, plugins: [{id, name, category, version, author, source, params}]}",
+            "{} → {api, wasm, openfx, plugins: [{id, name, category, version, author, source, params}]}",
             plugins_list
         ),
         cmd!(
@@ -678,6 +730,26 @@ pub fn specs() -> Vec<CommandSpec> {
             super::always,
             plugins_load
         ),
+        cmd!(
+            "effect.plugins.loadOfx",
+            "Load OpenFX Plug-in...",
+            [],
+            None,
+            "{path: an .ofx binary, an .ofx.bundle folder, or a folder scanned for bundles}",
+            ofx_on,
+            plugins_load_ofx
+        ),
+        CommandSpec {
+            id: "effect.plugins.scanOfx",
+            label: "Scan OpenFX Plug-ins",
+            menu: &[],
+            shortcut: None,
+            alt_shortcuts: &[],
+            params: "{retry?: bool} → {paths, loaded, errors}. retry forgets the crash blocklist first",
+            enabled: ofx_on,
+            run: plugins_scan_ofx,
+            journal: false,
+        },
     ]
 }
 

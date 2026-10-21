@@ -410,6 +410,9 @@ pub struct EffectEnv<'a> {
     /// comp's and the layer's motion blur switches are on (Transform's Use Composition's
     /// Shutter Angle).
     pub shutter: Option<(f64, f64, u32)>,
+    /// The layer's source time range in layer time seconds as (first, end). `None` when the
+    /// source has no duration. OpenFX retimers read this through the plug-in host.
+    pub layer_span: Option<(f64, f64)>,
 }
 
 /// What an effect gets to render with.

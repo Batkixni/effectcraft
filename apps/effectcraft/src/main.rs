@@ -237,6 +237,17 @@ fn main() -> eframe::Result {
                 if plugins.is_dir() {
                     let _ = session.execute("effect.plugins.load", json!({"folder": plugins.to_string_lossy()}));
                 }
+                // OpenFX from the standard folders, when this build links it (EFFECTCRAFT_NO_OFX=1 skips).
+                if session.ofx_loader.is_some() && std::env::var_os("EFFECTCRAFT_NO_OFX").is_none_or(|v| v != "1") {
+                    let result = session.execute("effect.plugins.scanOfx", json!({})).map_err(|e| e.to_string());
+                    let report = dir.join("ofx_scan.txt");
+                    let text = match &result {
+                        Ok(v) => format!("{v}\n"),
+                        Err(e) => format!("scan failed: {e}\n"),
+                    };
+                    eprint!("{text}");
+                    let _ = std::fs::write(&report, text);
+                }
                 session.config = Some(std::sync::Arc::new(effectcraft_engine::config::DirConfig::new(dir)));
             }
             session.load_settings();
@@ -445,6 +456,7 @@ impl eframe::App for Desktop {
     }
 
     fn on_exit(&mut self) {
+        effectcraft_host::shutdown();
         self.launch.exited();
         self.window.save(self.app.session.config.as_deref());
         self.app.on_exit();

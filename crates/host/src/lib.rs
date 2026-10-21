@@ -82,7 +82,9 @@ impl Exporter for FileExporter {
 
 /// A new session with media, import, expressions, scripting and export enabled.
 pub fn session() -> Session {
-    Session {
+    // `mut` is used when the `openfx` feature wires the loader below.
+    #[allow(unused_mut)]
+    let mut s = Session {
         // The desktop app, the CLI and the MCP server share installed Roto Brush models.
         models_dir: config_dir().map(|d| d.join("models")),
         exporter: Some(Arc::new(FileExporter::default())),
@@ -94,7 +96,27 @@ pub fn session() -> Session {
         script_ui: effectcraft_engine::scriptui::ScriptUi { dispatch: Some(effectcraft_script::dispatch_ui), ..Default::default() },
         plugin_loader: effectcraft_plugin::wasm_available().then_some(effectcraft_plugin::loader as effectcraft_engine::PluginLoader),
         ..Default::default()
+    };
+    // OpenFX plug-ins are native code run without a sandbox: only with the `openfx` feature, never
+    // on the web build. A missing feature leaves the commands disabled.
+    #[cfg(all(feature = "openfx", not(target_arch = "wasm32")))]
+    {
+        s.ofx_loader = Some(effectcraft_ofx::loader);
+        s.ofx_search_paths = effectcraft_ofx::default_search_paths();
+        s.ofx_clear_blocklist = Some(effectcraft_ofx::blocklist::clear);
+        if let Some(dir) = config_dir() {
+            effectcraft_ofx::blocklist::set_state_dir(dir);
+        }
     }
+    s
+}
+
+/// Call when the app or tool quits: stops helper programs OpenFX plug-ins started and drops the
+/// render-crash markers of plug-ins that got through this session (the `openfx` feature; nothing
+/// to do otherwise).
+pub fn shutdown() {
+    #[cfg(all(feature = "openfx", not(target_arch = "wasm32")))]
+    effectcraft_ofx::shutdown();
 }
 
 /// The platform config directory for EffectCraft (`EFFECTCRAFT_CONFIG_DIR` overrides):
@@ -108,6 +130,18 @@ pub fn config_dir() -> Option<std::path::PathBuf> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+
+    /// OpenFX commands exist only in builds that link the native host.
+    #[test]
+    fn openfx_commands_follow_the_build_feature() {
+        let mut s = super::session();
+        let on = cfg!(feature = "openfx");
+        assert_eq!(s.is_enabled("effect.plugins.loadOfx"), on);
+        assert_eq!(s.is_enabled("effect.plugins.scanOfx"), on);
+        if !on {
+            assert!(s.execute("effect.plugins.scanOfx", json!({})).is_err());
+        }
+    }
 
     /// Layer ▸ Camera ▸ Link Focus Distance to Point of Interest / to Layer: the expressions
     /// evaluate to the camera's focus on the target.

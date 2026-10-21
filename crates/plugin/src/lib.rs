@@ -59,7 +59,7 @@ pub fn loader(bytes: &[u8], source: &str) -> Result<serde_json::Value, String> {
         "name": spec.name,
         "category": spec.category,
         "version": m.as_ref().map(|m| m.version.clone()).unwrap_or_default(),
-        "api": PLUGIN_API_VERSION,
+        "api": m.as_ref().map(|m| m.api).unwrap_or(PLUGIN_API_VERSION),
         "params": spec.params.len(),
     }))
 }

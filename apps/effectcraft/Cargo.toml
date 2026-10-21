@@ -9,6 +9,11 @@ default-run = "effectcraft"
 [lints]
 workspace = true
 
+[features]
+default = ["openfx"]
+# Native OpenFX plug-ins, in-process. Not a sandbox: see docs/ofx.md.
+openfx = ["effectcraft-host/openfx"]
+
 [dependencies]
 effectcraft-engine = { workspace = true }
 effectcraft-host = { workspace = true }
