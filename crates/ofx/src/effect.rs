@@ -371,6 +371,7 @@ impl OfxEffect {
     /// Run the sequence on the OpenGL thread. `Cpu` means the plug-in can still render without it.
     fn render_gl(&self, inst: &mut Instance, out: &ClipImage, time: f64, window: OfxRectI, scale: f64) -> GlPass {
         let needed = inst.gl_mode() == GlSupport::Needed;
+        let faults_before = crate::seh::faults();
         let result = crate::gl::with_current(|| {
             if !inst.gl_attached {
                 let st = inst.entry.call(ACT_GL_ATTACHED, inst.handle(), None, None);
@@ -385,6 +386,10 @@ impl OfxEffect {
             let _ = inst.end_sequence(time, scale, true);
             st
         });
+        if crate::seh::faults() != faults_before {
+            inst.gl_refused = true;
+            crate::gl::poison();
+        }
         let fallback = |st| if needed { GlPass::Done(st) } else { GlPass::Cpu };
         match result {
             Ok(st) if matches!(st, K_STAT_GL_RENDER_FAILED | K_STAT_GL_OUT_OF_MEMORY | K_STAT_ERR_MEMORY) => fallback(st),

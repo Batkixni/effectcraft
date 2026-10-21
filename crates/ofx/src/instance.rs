@@ -140,11 +140,21 @@ impl PluginEntry {
         let run = || {
             // SAFETY: `main` is the plug-in's entry point, called with the argument shapes the
             // specification fixes; the handles are alive for the duration of the call (the
-            // caller waits for it, also when it runs on another thread).
-            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe {
-                main(a.as_ptr(), h as *const c_void, i as *mut c_void, o as *mut c_void)
-            }))
-            .unwrap_or(K_STAT_ERR_FATAL)
+            // caller waits for it, also when it runs on another thread). A native fault on
+            // Windows is caught in `seh::protect` and reported as a GL failure so the frame can
+            // be rendered on the CPU instead of exiting the process.
+            match crate::seh::protect(|| {
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe {
+                    main(a.as_ptr(), h as *const c_void, i as *mut c_void, o as *mut c_void)
+                }))
+                .unwrap_or(K_STAT_ERR_FATAL)
+            }) {
+                Ok(st) => st,
+                Err(crate::seh::Fault) => {
+                    log::error!("ofx: `{action}` in `{}` faulted; keeping the process", self.ofx_id);
+                    K_STAT_GL_RENDER_FAILED
+                }
+            }
         };
         // Linux plug-ins are built for glibc's 8 MiB thread stacks, and renders run on the
         // renderer's worker threads (2 MiB): a heavy render (Twixtor's optical flow) overflowed

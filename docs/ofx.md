@@ -4,11 +4,13 @@ EffectCraft can host OpenFX 1.4 image-effect plug-ins (`.ofx` binaries and `.ofx
 folders) and register each one as an ordinary effect. The desktop app and the CLI turn this on
 with the `openfx` feature, which is the default for those two packages on this fork.
 
-This runs native code in-process. A plug-in that corrupts memory can still take the process
-down. What the host does about that:
+This runs native code in-process. A plug-in that corrupts the heap can still take the process
+down later. What the host does about a fault in the plug-in itself:
 
 - every host callback and every action is wrapped so a Rust panic becomes an OFX error instead
   of an abort;
+- on Windows, an access violation inside an action is caught the same way. That frame is rendered
+  on the CPU when the plug-in allows it, and OpenGL stays off for the rest of the session;
 - a binary that dies while it is being loaded, or while it is rendering, leaves a marker in the
   config directory. Two deaths in a row put it on a blocklist and the next launch skips it.
   `effect.plugins.scanOfx {"retry": true}` clears the list;
@@ -46,8 +48,9 @@ short or byte, matching the clip). The output texture is bound as the framebuffe
 `kOfxImageEffectActionRender`. Pixels are read back into EffectCraft's premultiplied buffer.
 
 `OfxImageEffectOpenGLRenderSuiteV1` (`clipLoadTexture`, `clipFreeTexture`, `flushResources`) is
-provided. `kOfxStatGLRenderFailed`, `kOfxStatGLOutOfMemory` and an out-of-memory status retry
-that frame on the CPU when the plug-in also supports CPU (`true`, not `needed`).
+provided. `kOfxStatGLRenderFailed`, `kOfxStatGLOutOfMemory`, an out-of-memory status, or a native
+fault inside the plug-in retries that frame on the CPU when the plug-in also supports CPU
+(`true`, not `needed`). A native fault also turns OpenGL off for every plug-in after that.
 
 `EFFECTCRAFT_OFX_NO_GL=1` forces the CPU path and tells plug-ins OpenGL is not supported.
 Linux and macOS builds stay on the CPU. CUDA, Metal, OpenCL, overlays and custom interact UI

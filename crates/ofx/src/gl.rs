@@ -39,6 +39,12 @@ pub fn usable() -> bool {
 
 static BROKEN: AtomicBool = AtomicBool::new(false);
 
+/// The OpenGL context is no longer trustworthy (a plug-in faulted while it was current). Later
+/// frames stay on the CPU.
+pub fn poison() {
+    BROKEN.store(true, Ordering::Relaxed);
+}
+
 #[cfg(not(windows))]
 pub fn with_current<R: Send>(f: impl FnOnce() -> R + Send) -> Result<R, String> {
     let _ = f;

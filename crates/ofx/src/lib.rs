@@ -34,6 +34,7 @@ pub mod instance;
 pub mod loader;
 pub mod params;
 pub mod props;
+pub mod seh;
 pub mod suites;
 
 use std::path::PathBuf;
