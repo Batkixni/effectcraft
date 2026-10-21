@@ -44,7 +44,11 @@ hosts they recognise.
 
 ## OpenGL
 
-The host tells plug-ins that OpenGL rendering is supported on Windows. A plug-in that sets
+OpenGL is off. Plug-ins render on the CPU. Set `EFFECTCRAFT_OFX_GL=1` before launch to offer it.
+That opt-in did not successfully render the plug-ins that faulted; catching the fault only stopped
+the app from closing. Leave it unset.
+
+When the opt-in is set, the host tells plug-ins that OpenGL rendering is supported on Windows. A plug-in that sets
 `OfxImageEffectPropOpenGLRenderSupported` to `true` is rendered into a `GL_TEXTURE_2D` (float,
 short or byte, matching the clip). The output texture is bound as the framebuffer before
 `kOfxImageEffectActionRender`. Pixels are read back into EffectCraft's premultiplied buffer.

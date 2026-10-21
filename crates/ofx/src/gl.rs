@@ -10,7 +10,9 @@
 //! written against OpenGL 2.1 / 3.x compatibility expect). There is no OpenGL path on other
 //! operating systems: [`usable`] is false and renders stay on the CPU.
 //!
-//! `EFFECTCRAFT_OFX_NO_GL=1` disables the path before the first plug-in is described.
+//! OpenGL is off unless `EFFECTCRAFT_OFX_GL=1`. Offering it made many plug-ins fault, and catching
+//! the fault only kept the process open: the plug-in still did not render. The normal path is CPU.
+//! `EFFECTCRAFT_OFX_NO_GL=1` forces CPU even when the opt-in is set.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, OnceLock, PoisonError};
@@ -29,9 +31,13 @@ pub struct GpuInfo {
     pub output: bool,
 }
 
-/// The host can offer OpenGL. Optimistic until the first real context attempt fails.
+/// The host offers OpenGL only when asked. The default is CPU, which is the path plug-ins
+/// actually finish.
 pub fn usable() -> bool {
-    if !cfg!(windows) || std::env::var_os("EFFECTCRAFT_OFX_NO_GL").is_some_and(|v| v == "1") {
+    if !cfg!(windows) || std::env::var_os("EFFECTCRAFT_OFX_GL").is_none_or(|v| v != "1") {
+        return false;
+    }
+    if std::env::var_os("EFFECTCRAFT_OFX_NO_GL").is_some_and(|v| v == "1") {
         return false;
     }
     !BROKEN.load(Ordering::Relaxed)

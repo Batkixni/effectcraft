@@ -43,8 +43,8 @@
 > [glumbis/effectcraft](https://github.com/glumbis/effectcraft), which added the OpenFX host and
 > After Effects project import, and from the upstream project
 > [storytold/effectcraft](https://github.com/storytold/effectcraft).
-> On that base this tree keeps both, can hand OpenFX a Windows OpenGL context, and runs After
-> Effects `.aex` plug-ins out of process. OpenGL does not mean those plug-ins render; see below.
+> On that base this tree keeps both and runs After Effects `.aex` plug-ins out of process.
+> OpenFX renders on the CPU. OpenGL is off: offering it did not render those plug-ins.
 > [OpenFX](docs/ofx.md) · [`.aex` plug-ins](docs/aex.md) · [Opening `.aep` files](tools/aep-import/README.md).
 > Photoshop `.psd` / `.psb` import is upstream and is already in this build.
 > Windows x64 installers for this fork, including `effectcraft-helper-aex.exe` and the `.aep`
@@ -60,12 +60,9 @@
 >   A licence file the plug-in already wrote for itself, after you registered it in After Effects,
 >   is used only if that plug-in reads the file on its own. Details and the disclaimer:
 >   [docs/aex.md](docs/aex.md).
-> * **OpenGL does not get those OFX plug-ins rendered.** Offering it makes many of them fault.
->   On Windows that fault is caught, so a plug-in that does not render no longer closes the app.
->   The effect still has no picture. OpenGL stays off for the rest of that session. This is not a
->   successful OpenGL render, and it is not a CPU render of the same plug-in that you can rely on.
->   A plug-in that has already corrupted memory can still take the process down later.
->   `EFFECTCRAFT_OFX_NO_GL=1` never offers OpenGL. [docs/ofx.md](docs/ofx.md).
+> * **OpenFX is CPU.** OpenGL is not used. Turning it on (`EFFECTCRAFT_OFX_GL=1`) made many
+>   plug-ins fault. Catching that fault kept the app open and still did not render the plug-in.
+>   [docs/ofx.md](docs/ofx.md).
 
 <br>
 
