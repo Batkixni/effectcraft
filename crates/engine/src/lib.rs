@@ -491,6 +491,9 @@ pub struct Session {
     pub aex_loader: Option<AexLoader>,
     /// Where `effect.plugins.scanAex` looks (the `AEX` folder next to the program, plus `AEX_PLUGIN_PATH`).
     pub aex_search_paths: Vec<std::path::PathBuf>,
+    /// Converts an After Effects project (`.aep` / `.aepx`) into a script that rebuilds it
+    /// (hosts built with the `aep` feature): `file.importAep`.
+    pub aep_converter: Option<AepConverter>,
     /// ScriptUI windows and panels opened by scripts (see [`scriptui`]).
     pub script_ui: scriptui::ScriptUi,
     /// The last physical-memory reading (Settings ▸ Memory & CPU budgets); `None` = unknown
@@ -572,6 +575,9 @@ pub type OfxLoader = fn(&str) -> std::result::Result<Value, String>;
 /// Asks `effectcraft-helper-aex` to describe `.aex` plug-ins. The report is `{loaded, errors}`.
 pub type AexLoader = fn(&str) -> std::result::Result<Value, String>;
 
+/// Turns an `.aep` / `.aepx` path into the After Effects-style script that rebuilds it.
+pub type AepConverter = fn(&str) -> std::result::Result<String, String>;
+
 impl Default for Session {
     fn default() -> Self {
         let project = Arc::new(Project::default());
@@ -625,6 +631,7 @@ impl Default for Session {
             ofx_clear_blocklist: None,
             aex_loader: None,
             aex_search_paths: Vec::new(),
+            aep_converter: None,
             script_ui: scriptui::ScriptUi::default(),
             sys_memory: None,
             key_move: None,

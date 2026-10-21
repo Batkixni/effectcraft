@@ -90,6 +90,11 @@ Copy-Item (Join-Path $Bin 'effectcraft.exe'), (Join-Path $Bin 'effectcraft-cli.e
 $Helper = Join-Path $Root 'helpers\effectcraft-helper-aex\target\release\effectcraft-helper-aex.exe'
 if (-not (Test-Path $Helper)) { throw "missing $Helper (cargo build --release --manifest-path helpers/effectcraft-helper-aex/Cargo.toml)" }
 Copy-Item $Helper $Stage
+$AepSrc = Join-Path $Root 'tools\aep-import'
+$AepDst = Join-Path $Stage 'aep-import'
+if (-not (Test-Path (Join-Path $AepSrc 'aep2effectcraft.py'))) { throw "missing $AepSrc" }
+New-Item -ItemType Directory -Force -Path $AepDst | Out-Null
+Copy-Item (Join-Path $AepSrc 'aep2effectcraft.py'), (Join-Path $AepSrc 'aepx.py'), (Join-Path $AepSrc 'check_import.py'), (Join-Path $AepSrc 'requirements.txt'), (Join-Path $AepSrc 'README.md') $AepDst
 
 & (Join-Path $PSScriptRoot 'sign.ps1') (Join-Path $Stage 'effectcraft.exe') (Join-Path $Stage 'effectcraft-cli.exe')
 
@@ -109,6 +114,7 @@ $Portable = Join-Path $TargetDir "windows-package\effectcraft-$Version-windows-$
 Remove-Item -Recurse -Force $Portable -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $Portable | Out-Null
 Copy-Item (Join-Path $Stage '*.exe') $Portable
+Copy-Item (Join-Path $Stage 'aep-import') $Portable -Recurse
 foreach ($f in 'README.md', 'LICENSE', 'LICENSE-MIT', 'LICENSE-APACHE') {
   $p = Join-Path $Root $f
   if (Test-Path $p) { Copy-Item $p $Portable }

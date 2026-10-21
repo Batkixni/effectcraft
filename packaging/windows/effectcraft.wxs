@@ -61,7 +61,9 @@
         Condition="WIX_UPGRADE_DETECTED" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="INSTALLFOLDER" Name="EffectCraft" />
+      <Directory Id="INSTALLFOLDER" Name="EffectCraft">
+        <Directory Id="AepImportDir" Name="aep-import" />
+      </Directory>
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
     <StandardDirectory Id="DesktopFolder" />
@@ -93,6 +95,14 @@
       <!-- Out-of-process After Effects host. EffectCraft looks for it next to effectcraft.exe. -->
       <Component Id="EffectcraftAexHelper">
         <File Id="EffectcraftAexHelperExe" Source="$(var.BinDir)\effectcraft-helper-aex.exe" KeyPath="yes" />
+      </Component>
+
+      <Component Id="AepImportFiles" Directory="AepImportDir" Guid="C3A91E70-6B14-4F2A-9D55-1E8B7A4C0D21">
+        <File Id="AepPy" Source="$(var.BinDir)\aep-import\aep2effectcraft.py" KeyPath="yes" />
+        <File Id="AepxPy" Source="$(var.BinDir)\aep-import\aepx.py" />
+        <File Id="AepCheck" Source="$(var.BinDir)\aep-import\check_import.py" />
+        <File Id="AepReq" Source="$(var.BinDir)\aep-import\requirements.txt" />
+        <File Id="AepReadme" Source="$(var.BinDir)\aep-import\README.md" />
       </Component>
 
       <!-- A component under the user's profile folders needs an HKCU key path (ICE38, ICE43). -->

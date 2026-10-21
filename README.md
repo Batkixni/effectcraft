@@ -40,15 +40,18 @@
 </p>
 
 > **This fork.** [Batkixni/effectcraft](https://github.com/Batkixni/effectcraft) starts from
-> [glumbis/effectcraft](https://github.com/glumbis/effectcraft), which added the OpenFX host, and
-> from the upstream project [storytold/effectcraft](https://github.com/storytold/effectcraft).
-> On that OpenFX host this tree adds Windows OpenGL rendering (CPU if the plug-in reports a GL
-> failure) and After Effects `.aex` plug-ins out of process
-> ([docs/ofx.md](docs/ofx.md), [docs/aex.md](docs/aex.md)).
-> Windows x64 installers for this fork, including `effectcraft-helper-aex.exe`, are on
-> [Releases](https://github.com/Batkixni/effectcraft/releases). Upstream releases do not include
-> these. `.aex` plug-ins have no serial dialog, so an aescripts plug-in that unlocks only in its
-> own window stays on trial.
+> [glumbis/effectcraft](https://github.com/glumbis/effectcraft), which added the OpenFX host and
+> After Effects project import, and from the upstream project
+> [storytold/effectcraft](https://github.com/storytold/effectcraft).
+> On that base this tree keeps both, adds Windows OpenGL rendering for OpenFX (CPU if the plug-in
+> reports a GL failure), and runs After Effects `.aex` plug-ins out of process.
+> [OpenFX](docs/ofx.md) · [`.aex` plug-ins](docs/aex.md) · [Opening `.aep` files](tools/aep-import/README.md).
+> Photoshop `.psd` / `.psb` import is upstream and is already in this build.
+> Windows x64 installers for this fork, including `effectcraft-helper-aex.exe` and the `.aep`
+> converter, are on [Releases](https://github.com/Batkixni/effectcraft/releases). Upstream
+> releases do not include the OpenFX host, the `.aex` helper or `.aep` import.
+> `.aep` import needs Python 3 and `py -m pip install py-aep`. `.aex` plug-ins have no serial
+> dialog, so an aescripts plug-in that unlocks only in its own window stays on trial.
 
 <br>
 

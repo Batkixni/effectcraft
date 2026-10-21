@@ -29,6 +29,8 @@ effectcraft-aex = { workspace = true }
 
 [features]
 openfx = ["dep:effectcraft-ofx"]
+# Import After Effects projects (.aep / .aepx) through tools/aep-import (needs Python 3 + py-aep).
+aep = []
 
 [dev-dependencies]
 serde_json = { workspace = true }

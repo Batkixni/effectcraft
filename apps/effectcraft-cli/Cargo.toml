@@ -13,8 +13,9 @@ name = "effectcraft-cli"
 path = "src/main.rs"
 
 [features]
-default = ["openfx"]
+default = ["openfx", "aep"]
 openfx = ["effectcraft-host/openfx"]
+aep = ["effectcraft-host/aep"]
 
 [dependencies]
 effectcraft-engine = { workspace = true }

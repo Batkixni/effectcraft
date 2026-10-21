@@ -10,9 +10,11 @@ default-run = "effectcraft"
 workspace = true
 
 [features]
-default = ["openfx"]
+default = ["openfx", "aep"]
 # Native OpenFX plug-ins, in-process. Not a sandbox: see docs/ofx.md.
 openfx = ["effectcraft-host/openfx"]
+# After Effects project import (.aep / .aepx) through tools/aep-import (Python 3 + py-aep).
+aep = ["effectcraft-host/aep"]
 
 [dependencies]
 effectcraft-engine = { workspace = true }
