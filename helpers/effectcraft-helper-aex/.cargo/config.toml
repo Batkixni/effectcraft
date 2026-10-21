@@ -1,0 +1,4 @@
+# Only this package. Relative to the directory that contains `.cargo`.
+# Windows: aexlo 28e9f9a needs two PrPixelFormat casts before it compiles.
+[build]
+rustc-wrapper = "rustc-wrapper.cmd"

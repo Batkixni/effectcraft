@@ -53,6 +53,7 @@ const LAYERS: &[(&str, u8)] = &[
     ("format", 3),
     ("plugin", 3),
     ("ofx", 3),
+    ("aex", 3),
     ("interchange", 3),
     ("engine", 4),
     ("script", 4),

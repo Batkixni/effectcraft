@@ -2,6 +2,8 @@
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
 default-members = ["crates/*", "apps/*"]
+# The After Effects helper is its own program (aexlo, Rust 1.99). It is not a workspace member.
+exclude = ["helpers/effectcraft-helper-aex"]
 
 [workspace.package]
 version = "0.13.0"
@@ -47,6 +49,7 @@ effectcraft-hevcenc = { path = "crates/hevcenc" }
 effectcraft-av1enc = { path = "crates/av1enc" }
 effectcraft-plugin = { path = "crates/plugin" }
 effectcraft-ofx = { path = "crates/ofx" }
+effectcraft-aex = { path = "crates/aex" }
 
 # foundation
 thiserror = "2"

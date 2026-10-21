@@ -972,6 +972,7 @@ Effect
   Manage Effects... | effect.manage
   Load Effect Plug-in... | effect.plugins.load
   Load OpenFX Plug-in... | effect.plugins.loadOfx
+  Load After Effects Plug-in... | effect.plugins.loadAex
   ---
   @effects
 Animation

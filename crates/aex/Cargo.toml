@@ -1,0 +1,24 @@
+[package]
+name = "effectcraft-aex"
+description = "Hosts After Effects effect plug-ins (.aex) out of process. Discovers effectcraft-helper-aex, exchanges parameters and pixels as JSON, and registers each plug-in as an ordinary effect. The helper (helpers/effectcraft-helper-aex) is the only program that loads a plug-in."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+effectcraft-effects = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+effectcraft-engine = { workspace = true }
+
+# Protocol stand-in used by tests. It does not load plug-ins.
+[[bin]]
+name = "aex-mock-helper"
+path = "src/bin/aex-mock-helper.rs"

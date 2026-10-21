@@ -28,7 +28,52 @@ fn plugins_list(s: &mut Session, _: &Value) -> Result<Value> {
             })
         })
         .collect();
-    Ok(json!({"api": plugin::PLUGIN_API_VERSION, "wasm": s.plugin_loader.is_some(), "openfx": s.ofx_loader.is_some(), "plugins": list}))
+    Ok(json!({"api": plugin::PLUGIN_API_VERSION, "wasm": s.plugin_loader.is_some(), "openfx": s.ofx_loader.is_some(), "aex": s.aex_loader.is_some(), "plugins": list}))
+}
+
+/// The After Effects helper commands need a host that wires [`Session::aex_loader`].
+fn aex_on(s: &Session) -> std::result::Result<(), String> {
+    if s.aex_loader.is_some() { Ok(()) } else { Err("After Effects plug-ins are not available in this build".into()) }
+}
+
+/// `effect.plugins.loadAex`: ask `effectcraft-helper-aex` to describe one `.aex`, one `.plugin`
+/// bundle, or every plug-in under a folder, and register each as an ordinary effect.
+fn plugins_load_aex(s: &mut Session, p: &Value) -> Result<Value> {
+    let c = "effect.plugins.loadAex";
+    let loader = s.aex_loader.ok_or_else(|| EngineError::Other("After Effects plug-ins are not available in this build".into()))?;
+    let path = str_p(p, "path").ok_or_else(|| bad(c, "missing `path`"))?;
+    let r = loader(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let n = r["loaded"].as_array().map_or(0, Vec::len);
+    let errors: Vec<&str> = r["errors"].as_array().into_iter().flatten().filter_map(Value::as_str).collect();
+    match (n, errors.first()) {
+        (0, None) => s.toast(format!("{path}: no After Effects effects in it")),
+        (_, None) => s.toast(format!("Loaded {n} After Effects effect(s)")),
+        (_, Some(first)) => s.toast(format!("Loaded {n} After Effects effect(s), {} problem(s): {first}", errors.len())),
+    }
+    Ok(r)
+}
+
+/// `effect.plugins.scanAex`: load every plug-in in [`Session::aex_search_paths`]. Missing folders
+/// are skipped. One plug-in that stops the helper does not stop the rest: the helper is started
+/// again for the next file.
+fn plugins_scan_aex(s: &mut Session, _: &Value) -> Result<Value> {
+    let loader = s.aex_loader.ok_or_else(|| EngineError::Other("After Effects plug-ins are not available in this build".into()))?;
+    let (mut paths, mut loaded, mut errors) = (vec![], vec![], vec![]);
+    for dir in s.aex_search_paths.clone() {
+        if !dir.exists() {
+            continue;
+        }
+        let path = dir.to_string_lossy().to_string();
+        match loader(&path) {
+            Ok(r) => {
+                loaded.extend(r["loaded"].as_array().cloned().unwrap_or_default());
+                errors.extend(r["errors"].as_array().cloned().unwrap_or_default());
+            }
+            Err(e) => errors.push(json!(format!("{path}: {e}"))),
+        }
+        paths.push(path);
+    }
+    Ok(json!({"paths": paths, "loaded": loaded, "errors": errors}))
 }
 
 /// The OpenFX commands need a host built with the `openfx` feature.
@@ -718,7 +763,7 @@ pub fn specs() -> Vec<CommandSpec> {
         crate::query!(
             "effect.plugins.list",
             "List Effect Plug-ins",
-            "{} → {api, wasm, openfx, plugins: [{id, name, category, version, author, source, params}]}",
+            "{} → {api, wasm, openfx, aex, plugins: [{id, name, category, version, author, source, params}]}",
             plugins_list
         ),
         cmd!(
@@ -739,6 +784,26 @@ pub fn specs() -> Vec<CommandSpec> {
             ofx_on,
             plugins_load_ofx
         ),
+        cmd!(
+            "effect.plugins.loadAex",
+            "Load After Effects Plug-in...",
+            [],
+            None,
+            "{path: a .aex file, a .plugin bundle, or a folder of them}. Needs effectcraft-helper-aex next to the program (docs/aex.md)",
+            aex_on,
+            plugins_load_aex
+        ),
+        CommandSpec {
+            id: "effect.plugins.scanAex",
+            label: "Scan After Effects Plug-ins",
+            menu: &[],
+            shortcut: None,
+            alt_shortcuts: &[],
+            params: "{} → {paths, loaded, errors}. Looks in AEX next to the program and AEX_PLUGIN_PATH",
+            enabled: aex_on,
+            run: plugins_scan_aex,
+            journal: false,
+        },
         CommandSpec {
             id: "effect.plugins.scanOfx",
             label: "Scan OpenFX Plug-ins",

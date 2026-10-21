@@ -24,6 +24,8 @@ effectcraft-ofx = { workspace = true, optional = true }
 # WebAssembly effect plug-ins run in wasmi on native builds.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 effectcraft-plugin = { workspace = true, features = ["wasm"] }
+# After Effects plug-ins run in a separate helper (docs/aex.md). This crate only speaks JSON.
+effectcraft-aex = { workspace = true }
 
 [features]
 openfx = ["dep:effectcraft-ofx"]

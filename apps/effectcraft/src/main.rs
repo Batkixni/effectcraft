@@ -248,6 +248,18 @@ fn main() -> eframe::Result {
                     eprint!("{text}");
                     let _ = std::fs::write(&report, text);
                 }
+                // After Effects plug-ins, when effectcraft-helper-aex is next to this program
+                // (EFFECTCRAFT_NO_AEX=1 skips them; a missing helper stays quiet).
+                if session.aex_loader.is_some() && effectcraft_host::aex_configured() {
+                    let result = session.execute("effect.plugins.scanAex", json!({})).map_err(|e| e.to_string());
+                    let report = dir.join("aex_scan.txt");
+                    let text = match &result {
+                        Ok(v) => format!("{v}\n"),
+                        Err(e) => format!("scan failed: {e}\n"),
+                    };
+                    eprint!("{text}");
+                    let _ = std::fs::write(&report, text);
+                }
                 session.config = Some(std::sync::Arc::new(effectcraft_engine::config::DirConfig::new(dir)));
             }
             session.load_settings();

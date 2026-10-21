@@ -87,6 +87,9 @@ $Stage = Join-Path $TargetDir "windows-package\$Arch"
 Remove-Item -Recurse -Force $Stage -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $Stage | Out-Null
 Copy-Item (Join-Path $Bin 'effectcraft.exe'), (Join-Path $Bin 'effectcraft-cli.exe') $Stage
+$Helper = Join-Path $Root 'helpers\effectcraft-helper-aex\target\release\effectcraft-helper-aex.exe'
+if (-not (Test-Path $Helper)) { throw "missing $Helper (cargo build --release --manifest-path helpers/effectcraft-helper-aex/Cargo.toml)" }
+Copy-Item $Helper $Stage
 
 & (Join-Path $PSScriptRoot 'sign.ps1') (Join-Path $Stage 'effectcraft.exe') (Join-Path $Stage 'effectcraft-cli.exe')
 

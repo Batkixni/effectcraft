@@ -1187,6 +1187,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "effectcraft-aex"
+version = "0.13.0"
+dependencies = [
+ "effectcraft-effects",
+ "effectcraft-engine",
+ "log",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "effectcraft-automation"
 version = "0.13.0"
 dependencies = [
@@ -1368,6 +1379,7 @@ dependencies = [
 name = "effectcraft-host"
 version = "0.13.0"
 dependencies = [
+ "effectcraft-aex",
  "effectcraft-engine",
  "effectcraft-export",
  "effectcraft-expr",

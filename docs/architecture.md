@@ -43,6 +43,7 @@ cpal or muda. Everything in L0 to L4, the egui UI and the web app also build for
 | L3 | `lottie` | Lottie JSON / dotLottie import and export (layers, precomps, eased and spatial keyframes, shapes, masks, mattes) with a warnings list for what Lottie cannot express |
 | L3 | `plugin` | Effect plug-ins: loads sandboxed WebAssembly effect modules (plug-in API v1; the wasmi interpreter behind the `wasm` feature, on for native hosts) into the effect registry ([plugins.md](plugins.md)) |
 | L3 | `ofx` | OpenFX 1.4 image-effect host, opt-in (`openfx`): native bundles registered as effects. Windows builds can hand them OpenGL textures and fall back to CPU ([ofx.md](ofx.md)) |
+| L3 | `aex` | After Effects `.aex` plug-ins out of process: JSON to `effectcraft-helper-aex`, which is the only program that loads a plug-in ([aex.md](aex.md)) |
 | L4 | `engine` | `Session`: project, branching undo history, editor state, the command registry and menus, the ScriptUI window model (`scriptui`) |
 | L4 | `script` | Scripting: JavaScript (boa) with an After Effects-style object model (`app.project`, comps, layers, properties, render queue) and ScriptUI (dialogs, palettes, dockable panels; script-host threads so dialogs block `show()`), whose edits run engine commands; AE match names |
 | L4 | `host` | A fully wired `Session` (media, expressions, scripting, WebAssembly plug-ins, exporter) for the frontends |

@@ -108,6 +108,13 @@ pub fn session() -> Session {
             effectcraft_ofx::blocklist::set_state_dir(dir);
         }
     }
+    // After Effects plug-ins stay in a separate program (docs/aex.md). The loader only finds that
+    // program and speaks JSON; a missing helper disables nothing else.
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        s.aex_loader = Some(effectcraft_aex::loader);
+        s.aex_search_paths = effectcraft_aex::default_search_paths();
+    }
     s
 }
 
@@ -117,6 +124,21 @@ pub fn session() -> Session {
 pub fn shutdown() {
     #[cfg(all(feature = "openfx", not(target_arch = "wasm32")))]
     effectcraft_ofx::shutdown();
+    #[cfg(not(target_arch = "wasm32"))]
+    effectcraft_aex::shutdown();
+}
+
+/// Whether start-up should look for After Effects plug-ins: the helper program is installed and
+/// `EFFECTCRAFT_NO_AEX` is not `1`.
+pub fn aex_configured() -> bool {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        effectcraft_aex::configured()
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        false
+    }
 }
 
 /// The platform config directory for EffectCraft (`EFFECTCRAFT_CONFIG_DIR` overrides):
@@ -138,6 +160,8 @@ mod tests {
         let on = cfg!(feature = "openfx");
         assert_eq!(s.is_enabled("effect.plugins.loadOfx"), on);
         assert_eq!(s.is_enabled("effect.plugins.scanOfx"), on);
+        assert!(s.is_enabled("effect.plugins.loadAex"));
+        assert!(s.is_enabled("effect.plugins.scanAex"));
         if !on {
             assert!(s.execute("effect.plugins.scanOfx", json!({})).is_err());
         }

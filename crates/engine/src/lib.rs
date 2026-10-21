@@ -486,6 +486,11 @@ pub struct Session {
     /// Forgets the OpenFX crash blocklist (plug-ins skipped because they crashed the app while
     /// loading or rendering): `effect.plugins.scanOfx {"retry": true}`.
     pub ofx_clear_blocklist: Option<fn()>,
+    /// Loads After Effects plug-ins through the external helper (docs/aex.md): `effect.plugins.loadAex`
+    /// and `effect.plugins.scanAex`. The helper is a separate program; this process never loads a `.aex`.
+    pub aex_loader: Option<AexLoader>,
+    /// Where `effect.plugins.scanAex` looks (the `AEX` folder next to the program, plus `AEX_PLUGIN_PATH`).
+    pub aex_search_paths: Vec<std::path::PathBuf>,
     /// ScriptUI windows and panels opened by scripts (see [`scriptui`]).
     pub script_ui: scriptui::ScriptUi,
     /// The last physical-memory reading (Settings ▸ Memory & CPU budgets); `None` = unknown
@@ -564,6 +569,9 @@ pub type PluginLoader = fn(&[u8], &str) -> std::result::Result<Value, String>;
 /// scanned for bundles). The report is `{loaded, errors}`.
 pub type OfxLoader = fn(&str) -> std::result::Result<Value, String>;
 
+/// Asks `effectcraft-helper-aex` to describe `.aex` plug-ins. The report is `{loaded, errors}`.
+pub type AexLoader = fn(&str) -> std::result::Result<Value, String>;
+
 impl Default for Session {
     fn default() -> Self {
         let project = Arc::new(Project::default());
@@ -615,6 +623,8 @@ impl Default for Session {
             ofx_loader: None,
             ofx_search_paths: Vec::new(),
             ofx_clear_blocklist: None,
+            aex_loader: None,
+            aex_search_paths: Vec::new(),
             script_ui: scriptui::ScriptUi::default(),
             sys_memory: None,
             key_move: None,
