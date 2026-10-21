@@ -43,15 +43,29 @@
 > [glumbis/effectcraft](https://github.com/glumbis/effectcraft), which added the OpenFX host and
 > After Effects project import, and from the upstream project
 > [storytold/effectcraft](https://github.com/storytold/effectcraft).
-> On that base this tree keeps both, adds Windows OpenGL rendering for OpenFX (CPU if the plug-in
-> reports a GL failure), and runs After Effects `.aex` plug-ins out of process.
+> On that base this tree keeps both, can hand OpenFX a Windows OpenGL context, and runs After
+> Effects `.aex` plug-ins out of process. OpenGL does not mean those plug-ins render; see below.
 > [OpenFX](docs/ofx.md) · [`.aex` plug-ins](docs/aex.md) · [Opening `.aep` files](tools/aep-import/README.md).
 > Photoshop `.psd` / `.psb` import is upstream and is already in this build.
 > Windows x64 installers for this fork, including `effectcraft-helper-aex.exe` and the `.aep`
 > converter, are on [Releases](https://github.com/Batkixni/effectcraft/releases). Upstream
 > releases do not include the OpenFX host, the `.aex` helper or `.aep` import.
-> `.aep` import needs Python 3 and `py -m pip install py-aep`. `.aex` plug-ins have no serial
-> dialog, so an aescripts plug-in that unlocks only in its own window stays on trial.
+> `.aep` import needs Python 3 and `py -m pip install py-aep`.
+>
+> **Known problems in this fork**
+>
+> * **`.aex` serial dialogs do not open.** aescripts (and similar) plug-ins that unlock only after
+>   you type a serial in their own window stay on the trial. EffectCraft does not show that window,
+>   does not add a serial field, and does not bypass, patch, or replace the vendor's licence check.
+>   A licence file the plug-in already wrote for itself, after you registered it in After Effects,
+>   is used only if that plug-in reads the file on its own. Details and the disclaimer:
+>   [docs/aex.md](docs/aex.md).
+> * **OpenGL does not get those OFX plug-ins rendered.** Offering it makes many of them fault.
+>   On Windows that fault is caught, so a plug-in that does not render no longer closes the app.
+>   The effect still has no picture. OpenGL stays off for the rest of that session. This is not a
+>   successful OpenGL render, and it is not a CPU render of the same plug-in that you can rely on.
+>   A plug-in that has already corrupted memory can still take the process down later.
+>   `EFFECTCRAFT_OFX_NO_GL=1` never offers OpenGL. [docs/ofx.md](docs/ofx.md).
 
 <br>
 

@@ -57,6 +57,13 @@ control channel.
 
 These are limits of this integration and of aexlo `28e9f9a`, not of the plug-in's own licence.
 
+### Disclaimer: serial numbers and trial builds
+
+EffectCraft does not unlock paid plug-ins. It does not bypass, patch, hook, or replace a vendor's
+licence check, and it does not accept or store a serial on the vendor's behalf. If a plug-in stays
+on its trial build here, that is the plug-in's own check running without the window it uses inside
+After Effects.
+
 * **No registration window.** aexlo does not send `PF_Cmd_EVENT`, so a plug-in has nowhere to draw
   its own UI. Buttons (the usual "License" or "Register" control) are not shown in Effect
   Controls. The helper also tells the plug-in it is a headless renderer. An aescripts plug-in
